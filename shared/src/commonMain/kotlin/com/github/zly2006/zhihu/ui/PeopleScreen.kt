@@ -91,8 +91,11 @@ import com.github.zly2006.zhihu.ui.components.AuthorBadge
 import com.github.zly2006.zhihu.ui.components.FeedCard
 import com.github.zly2006.zhihu.ui.components.PaginatedList
 import com.github.zly2006.zhihu.ui.components.ProgressIndicatorFooter
+import com.github.zly2006.zhihu.viewmodel.ContentBlocklistEnvironment
 import com.github.zly2006.zhihu.viewmodel.PaginationEnvironment
 import com.github.zly2006.zhihu.viewmodel.PaginationViewModel
+import com.github.zly2006.zhihu.viewmodel.ProfileLoadEnvironment
+import com.github.zly2006.zhihu.viewmodel.ZhihuApiEnvironment
 import com.github.zly2006.zhihu.viewmodel.feed.BaseFeedViewModel
 import com.github.zly2006.zhihu.viewmodel.rememberPaginationEnvironment
 import io.ktor.client.call.body
@@ -352,7 +355,7 @@ class PersonViewModel(
         followingFeedModel,
     )
 
-    suspend fun toggleFollow(environment: PaginationEnvironment) {
+    suspend fun toggleFollow(environment: ZhihuApiEnvironment) {
         val client = environment.httpClient()
         if (isFollowing) {
             val jojo = client
@@ -373,7 +376,7 @@ class PersonViewModel(
         }
     }
 
-    suspend fun toggleBlock(environment: PaginationEnvironment) {
+    suspend fun toggleBlock(environment: ZhihuApiEnvironment) {
         val client = environment.httpClient()
         if (isBlocking) {
             client
@@ -390,7 +393,7 @@ class PersonViewModel(
         }
     }
 
-    suspend fun toggleRecommendationBlock(environment: PaginationEnvironment) {
+    suspend fun toggleRecommendationBlock(environment: ContentBlocklistEnvironment) {
         if (isBlockedInRecommendations) {
             environment.removeBlockedUser(person.id)
             isBlockedInRecommendations = false
@@ -405,7 +408,7 @@ class PersonViewModel(
         }
     }
 
-    suspend fun load(environment: PaginationEnvironment) {
+    suspend fun load(environment: ProfileLoadEnvironment) {
         environment.addReadHistory(person.id, "profile")
 
         val jojo = environment

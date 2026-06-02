@@ -170,7 +170,7 @@ class ArticleViewModel(
     open class ArticlesSharedData : ArticleAnswerSwitchData()
 
     @OptIn(ExperimentalStdlibApi::class)
-    fun loadArticle(environment: PaginationEnvironment) {
+    fun loadArticle(environment: ArticleLoadEnvironment) {
         if (httpClient == null) return
         viewModelScope.launch {
             withContext(Dispatchers.Default) {
@@ -302,7 +302,7 @@ class ArticleViewModel(
         }
     }
 
-    fun toggleFavorite(collectionId: String, remove: Boolean, environment: PaginationEnvironment) {
+    fun toggleFavorite(collectionId: String, remove: Boolean, environment: ZhihuApiEnvironment) {
         if (httpClient == null) return
         viewModelScope.launch {
             try {
@@ -332,7 +332,7 @@ class ArticleViewModel(
         }
     }
 
-    fun requestAiSummary(environment: PaginationEnvironment) {
+    fun requestAiSummary(environment: ZhihuApiEnvironment) {
         if (httpClient == null) {
             aiSummaryError = "未初始化网络客户端"
             return
@@ -455,7 +455,7 @@ class ArticleViewModel(
 
     private val collectionOrder = mutableListOf<String>()
 
-    fun loadCollections(environment: PaginationEnvironment) {
+    fun loadCollections(environment: ZhihuApiEnvironment) {
         if (httpClient == null) return
         viewModelScope.launch {
             withContext(Dispatchers.Default) {
@@ -495,7 +495,7 @@ class ArticleViewModel(
     }
 
     fun createNewCollection(
-        environment: PaginationEnvironment,
+        environment: ZhihuApiEnvironment,
         title: String,
         description: String = "",
         isPublic: Boolean = false,
@@ -517,7 +517,7 @@ class ArticleViewModel(
         }
     }
 
-    fun toggleVoteUp(environment: PaginationEnvironment, newState: VoteUpState) {
+    fun toggleVoteUp(environment: ZhihuApiEnvironment, newState: VoteUpState) {
         viewModelScope.launch {
             try {
                 val endpoint = when (article.type) {
@@ -546,7 +546,7 @@ class ArticleViewModel(
 
     // 导出为图片 - 使用WebView渲染
     suspend fun exportToImage(
-        environment: PaginationEnvironment,
+        environment: ArticleExportContentEnvironment,
         includeAppAttribution: Boolean,
         onComplete: (Boolean) -> Unit,
     ) {
@@ -562,7 +562,7 @@ class ArticleViewModel(
 
     // 导出为带评论的图片 - 使用WebView渲染
     suspend fun exportToImageWithComments(
-        environment: PaginationEnvironment,
+        environment: ArticleExportContentEnvironment,
         commentCount: Int,
         includeAppAttribution: Boolean,
         onComplete: (Boolean) -> Unit,
@@ -578,7 +578,7 @@ class ArticleViewModel(
     }
 
     suspend fun exportToHtml(
-        environment: PaginationEnvironment,
+        environment: ArticleExportContentEnvironment,
         includeAppAttribution: Boolean,
         onComplete: (Boolean) -> Unit,
     ) {
@@ -618,18 +618,18 @@ class ArticleViewModel(
         }
     }
 
-    private fun requiresHtmlExportPermission(environment: PaginationEnvironment): Boolean =
+    private fun requiresHtmlExportPermission(environment: ArticleExportEnvironment): Boolean =
         environment.requiresHtmlExportPermission()
 
-    private fun hasStoragePermission(environment: PaginationEnvironment): Boolean =
+    private fun hasStoragePermission(environment: ArticleExportEnvironment): Boolean =
         environment.hasImageExportPermission()
 
-    private fun requestStoragePermission(environment: PaginationEnvironment) {
+    private fun requestStoragePermission(environment: ArticleExportEnvironment) {
         environment.requestImageExportPermission()
     }
 
     private suspend fun exportToImageInternal(
-        environment: PaginationEnvironment,
+        environment: ArticleExportContentEnvironment,
         includeComments: Boolean,
         commentCount: Int,
         includeAppAttribution: Boolean,
@@ -695,7 +695,7 @@ class ArticleViewModel(
         timeoutMs: Long,
     ): PreparedArticleExportContent = renderer.prepareExportWebView(htmlContent, timeoutMs)
 
-    private fun loadExportAssetText(environment: PaginationEnvironment, fileName: String): String = try {
+    private fun loadExportAssetText(environment: ArticleExportEnvironment, fileName: String): String = try {
         environment.loadExportAssetText(fileName)
     } catch (e: Exception) {
         Log.e("ArticleViewModel", "Failed to load export asset: $fileName", e)
@@ -715,14 +715,14 @@ class ArticleViewModel(
     private fun recycleExportBitmap(renderer: ArticleImageExportRenderer, bitmap: Any) =
         renderer.recycleExportBitmap(bitmap)
 
-    private fun articleImageExportRenderer(environment: PaginationEnvironment): ArticleImageExportRenderer? =
+    private fun articleImageExportRenderer(environment: ArticleExportEnvironment): ArticleImageExportRenderer? =
         environment.articleImageExportRenderer { fileName ->
             loadExportAssetText(environment, fileName)
         }
 
     // 创建HTML内容
     private suspend fun createHtmlContent(
-        environment: PaginationEnvironment,
+        environment: ArticleExportContentEnvironment,
         includeComments: Boolean,
         commentCount: Int,
         includeAppAttribution: Boolean,
@@ -744,7 +744,7 @@ class ArticleViewModel(
     }
 
     private suspend fun createOfflineHtmlContent(
-        environment: PaginationEnvironment,
+        environment: ArticleExportContentEnvironment,
         includeAppAttribution: Boolean,
     ): String = withContext(Dispatchers.Default) {
         environment.buildOfflineArticleExportHtml(
@@ -755,7 +755,7 @@ class ArticleViewModel(
     }
 
     private suspend fun fetchExportComments(
-        environment: PaginationEnvironment,
+        environment: ArticleExportContentEnvironment,
         requestedCount: Int,
     ): List<ArticleExportComment> {
         val safeRequestedCount = requestedCount.coerceAtLeast(0)
@@ -789,12 +789,12 @@ class ArticleViewModel(
         ?: throw IllegalStateException("内容未加载完成")
 
     // 使用MediaStore保存图片到公共目录
-    private fun saveImageToMediaStore(environment: PaginationEnvironment, bitmap: Any) {
+    private fun saveImageToMediaStore(environment: ArticleExportEnvironment, bitmap: Any) {
         val displayName = buildExportFileName("jpg")
         environment.saveImageToMediaStore(displayName, bitmap)
     }
 
-    private fun saveHtmlToDownloads(environment: PaginationEnvironment, htmlContent: String): String {
+    private fun saveHtmlToDownloads(environment: ArticleExportEnvironment, htmlContent: String): String {
         val displayName = buildExportFileName("html")
         return environment.saveHtmlToDownloads(displayName, htmlContent)
     }
@@ -953,7 +953,7 @@ class ArticleViewModel(
     }
 
     // 导出到剪贴板
-    fun exportToClipboard(environment: PaginationEnvironment) {
+    fun exportToClipboard(environment: ClipboardEnvironment) {
         val markdown = convertToMarkdown()
 
         // 将Markdown文本复制到剪贴板

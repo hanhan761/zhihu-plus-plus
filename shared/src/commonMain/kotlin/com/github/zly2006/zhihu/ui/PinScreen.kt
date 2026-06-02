@@ -86,7 +86,8 @@ import com.github.zly2006.zhihu.ui.components.ShareDialog
 import com.github.zly2006.zhihu.ui.components.getShareText
 import com.github.zly2006.zhihu.ui.components.handleShareAction
 import com.github.zly2006.zhihu.ui.components.rememberShareDialogRuntime
-import com.github.zly2006.zhihu.viewmodel.PaginationEnvironment
+import com.github.zly2006.zhihu.viewmodel.ContentLoadEnvironment
+import com.github.zly2006.zhihu.viewmodel.ZhihuApiEnvironment
 import com.github.zly2006.zhihu.viewmodel.rememberPaginationEnvironment
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
@@ -108,7 +109,7 @@ const val PIN_SCREEN_ERROR_TAG = "pin_screen_error"
 const val PIN_SCREEN_SCROLL_TAG = "pin_screen_scroll"
 
 private suspend fun togglePinLike(
-    environment: PaginationEnvironment,
+    environment: ZhihuApiEnvironment,
     pin: Pin,
     isLiked: Boolean,
 ): PinLikeResult {
@@ -126,7 +127,7 @@ private suspend fun togglePinLike(
 }
 
 private suspend fun loadPinDetail(
-    environment: PaginationEnvironment,
+    environment: ContentLoadEnvironment,
     pin: Pin,
 ): PinScreenUiState {
     environment.addReadHistory(pin.id.toString(), "pin")
